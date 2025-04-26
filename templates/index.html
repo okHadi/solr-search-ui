@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Solr Search</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Search in Solr</h1>
+      </header>
+
+      <!-- Search Form -->
+      <form id="search-form" class="search-form">
+        <input
+          type="text"
+          name="q"
+          id="search-query"
+          placeholder="Search by title"
+          value="{{ query }}"
+          autocomplete="off"
+          required
+        />
+        <input
+          type="text"
+          name="category"
+          id="category"
+          placeholder="Category"
+          value="{{ category }}"
+          autocomplete="off"
+        />
+        <input
+          type="text"
+          name="author"
+          id="author"
+          placeholder="Author"
+          value="{{ author }}"
+          autocomplete="off"
+        />
+        <button type="submit">Search</button>
+      </form>
+
+      <!-- Display Search Results -->
+      <div id="search-results">
+        <h2>Search Results</h2>
+        <ul id="results-list"></ul>
+      </div>
+
+      <!-- Autocomplete Suggestions -->
+      <div id="suggestions" class="suggestions-container"></div>
+    </div>
+
+    <script>
+      // Handle form submission via AJAX
+      $("#search-form").on("submit", function (event) {
+        event.preventDefault(); // Prevent the default form submission
+
+        let query = $("#search-query").val();
+        let category = $("#category").val();
+        let author = $("#author").val();
+
+        // Send the search request
+        $.get(
+          "/search",
+          { q: query, category: category, author: author },
+          function (data) {
+            // Display search results
+            let resultsList = $("#results-list");
+            resultsList.empty(); // Clear previous results
+
+            if (data.length > 0) {
+              data.forEach(function (doc) {
+                resultsList.append(
+                  `<li>
+                    <strong>${doc.title}</strong><br />
+                    <em>Category:</em> ${doc.category || "false"}<br />
+                    <em>Author:</em> ${doc.author || "false"}<br />
+                    <em>Published:</em> ${doc.published || "false"}
+                  </li>`
+                );
+              });
+            } else {
+              resultsList.append("<li>No results found.</li>");
+            }
+          }
+        );
+      });
+
+      // Autocomplete feature
+      $("#search-query").on("input", function () {
+        let query = $(this).val();
+        if (query.length > 2) {
+          $.get("/autocomplete", { q: query }, function (data) {
+            let suggestionsContainer = $("#suggestions");
+            suggestionsContainer.empty();
+
+            if (data.length > 0) {
+              data.forEach(function (suggestion) {
+                suggestionsContainer.append(
+                  `<div class="suggestion-item">${suggestion}</div>`
+                );
+              });
+            } else {
+              suggestionsContainer.append(
+                `<div class="suggestion-item">No suggestions found</div>`
+              );
+            }
+          });
+        } else {
+          $("#suggestions").empty();
+        }
+      });
+
+      // Handle click on suggestion item
+      $(document).on("click", ".suggestion-item", function () {
+        $("#search-query").val($(this).text());
+        $("#suggestions").empty();
+      });
+    </script>
+  </body>
+</html>

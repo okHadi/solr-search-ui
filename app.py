@@ -2,31 +2,26 @@ from flask import Flask, render_template, request, jsonify
 import requests
 
 app = Flask(__name__)
-SOLR_URL = 'http://localhost:8983/solr/books/select'  # Adjusted the Solr URL
-
+SOLR_URL = 'http://localhost:8983/solr/books/select'
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
-
 @app.route('/search')
 def search():
-    # Default to all documents if no query is provided
     query = request.args.get('q', '*:*')
     category = request.args.get('category', '')
     author = request.args.get('author', '')
 
     params = {
-        # Search in the title field for the query
         'q': f'title:{query}' if query else '*:*',
-        'wt': 'json',  # Response in JSON format
-        'rows': 20,  # Limit the number of results to 20
-        'q.op': 'OR',  # Default query operator
-        'indent': 'true',  # Indent the JSON response for readability
+        'wt': 'json',
+        'rows': 20,
+        'q.op': 'OR',
+        'indent': 'true',
     }
 
-    # Apply filters for category and author if provided
     fq = []
     if category:
         fq.append(f'category:{category}')
@@ -37,39 +32,32 @@ def search():
 
     try:
         response = requests.get(SOLR_URL, params=params)
-        response.raise_for_status()  # Raise an error if the request fails
-        # Extract documents from the response
+        response.raise_for_status()
         docs = response.json()['response']['docs']
-        return jsonify(docs)  # Return the results as JSON
+        return jsonify(docs)
     except requests.exceptions.RequestException as e:
-        # Return an error message if the request fails
         return jsonify({"error": str(e)}), 500
-
 
 @app.route('/autocomplete')
 def autocomplete():
-    query = request.args.get('q', '')  # Get the query for autocomplete
+    query = request.args.get('q', '')
     params = {
-        'q': f'title:{query}*',  # Search for titles starting with the query
-        'wt': 'json',  # Response in JSON format
-        'rows': 5,  # Limit to 5 results for autocomplete suggestions
-        'fl': 'title',  # Only return the title field
-        'q.op': 'OR',  # Query operator
-        'indent': 'true'  # Indent the JSON response for readability
+        'q': f'title:{query}*',
+        'wt': 'json',
+        'rows': 5,
+        'fl': 'title',
+        'q.op': 'OR',
+        'indent': 'true'
     }
 
     try:
         response = requests.get(SOLR_URL, params=params)
-        response.raise_for_status()  # Raise an error if the request fails
-        # Extract documents from the response
+        response.raise_for_status()
         docs = response.json()['response']['docs']
-        suggestions = [doc['title']
-                       for doc in docs]  # Extract titles for suggestions
-        return jsonify(suggestions)  # Return the suggestions as JSON
+        suggestions = [doc['title'] for doc in docs]
+        return jsonify(suggestions)
     except requests.exceptions.RequestException as e:
-        # Return an error message if the request fails
         return jsonify({"error": str(e)}), 500
-
 
 if __name__ == '__main__':
     app.run(debug=True)

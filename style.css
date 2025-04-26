@@ -1,4 +1,3 @@
-/* General Styles */
 body {
   font-family: Arial, sans-serif;
   background-color: #f4f4f9;
@@ -57,7 +56,6 @@ h1 {
   background-color: #45a049;
 }
 
-/* Results Section */
 #search-results {
   margin-top: 30px;
 }
@@ -80,7 +78,6 @@ em {
   color: #777;
 }
 
-/* Autocomplete Suggestions */
 .suggestions-container {
   position: absolute;
   background-color: white;
@@ -102,7 +99,6 @@ em {
   background-color: #ddd;
 }
 
-/* Small Screens */
 @media (max-width: 600px) {
   .container {
     width: 95%;
